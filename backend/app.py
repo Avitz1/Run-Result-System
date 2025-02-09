@@ -8,7 +8,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-
 class run_result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tool = db.Column(db.String(16), nullable=False, index=True)
