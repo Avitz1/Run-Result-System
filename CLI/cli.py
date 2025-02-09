@@ -19,11 +19,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from model.publish_result_model import PublishResultRequest
 
 
-class RunResultProcessor:
-    """
-    Processes the command line arguments and generates the RunResult object
-    """
+def read_config(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    return config
 
+
+class ArgumentParser:
     def __init__(self):
         self.parser = argparse.ArgumentParser(description="Process run results.")
         self.parser.add_argument("--tool", type=str, help="the tool that was run")
@@ -32,95 +34,101 @@ class RunResultProcessor:
         )
         self.parser.add_argument("--data", type=str, help="the data in JSON format")
         self.args = None
-        self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
 
     def parse_arguments(self):
         self.args = self.parser.parse_args()
+        return self.args
 
     def validate_arguments(self):
-        """
-        Validates the arguments passed to the script
-        """
-        if (
-                self.args.tool is None
-                or len(self.args.tool) == 0
-                or self.args.tool.isspace()
-        ):
+        if not self.args.tool or self.args.tool.isspace():
             self.parser.error("The tool must be specified")
-        if self.args.result_file is None and self.args.data is None:
+        if not self.args.result_file and not self.args.data:
             self.parser.error("Either the result file or the data must be specified")
-        elif self.args.result_file is not None and self.args.data is not None:
-            self.parser.error(
-                "Only one of the result file or the data must be specified"
-            )
+        if self.args.result_file and self.args.data:
+            self.parser.error("Only one of the result file or the data must be specified")
+
+
+class DataLoader:
+    def __init__(self, args):
+        self.args = args
 
     def load_data(self):
-        """
-        Loads the data from the specified source
-        """
         if self.args.result_file:
-            try:
-                with open(self.args.result_file, "r", encoding="utf-8") as file:
-                    return file.read()
-            except FileNotFoundError:
-                self.parser.error("The result file does not exist")
-        elif self.args.data:
-            try:
-                return json.loads(self.args.data)
-            except json.JSONDecodeError:
-                self.parser.error("The data provided is not valid JSON")
-        return self.args.data
+            return self._load_from_file(self.args.result_file)
+        if self.args.data:
+            return self._load_from_json(self.args.data)
+        return None
 
-    def create_request(self) -> PublishResultRequest:
-        """
-        Sends the data to the server
-        """
-        datetime_str = datetime.now(pytz.utc).isoformat()
-        datetime_str = datetime_str.replace("+00:00", "Z")
+    def _load_from_file(self, file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                return file.read()
+        except FileNotFoundError:
+            raise argparse.ArgumentTypeError("The result file does not exist")
+
+    def _load_from_json(self, data):
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            raise argparse.ArgumentTypeError("The data provided is not valid JSON")
+
+
+class PublishRequestCreator:
+    @staticmethod
+    def create_request(tool, data):
+        datetime_str = datetime.now(pytz.utc).isoformat().replace("+00:00", "Z")
         return PublishResultRequest(
-            tool=self.args.tool,
-            data=self.load_data(),
+            tool=tool,
+            data=data,
             time=datetime_str
         )
 
-    def send_data(self, publish_request: PublishResultRequest):
-        """
-        Sends the data to the server
-        """
-        api_url = self.config.get("GENERAL", "run_result_server_url")
-        retries = self.config.getint("GENERAL", "retries", fallback=3)
-        retry_backoff = self.config.getint("GENERAL", "retry_backoff", fallback=5)
 
-        if not api_url:
+class RequestSender:
+    def __init__(self, config):
+        self.api_url = config.get("GENERAL", "run_result_server_url")
+        self.retries = config.getint("GENERAL", "retries", fallback=3)
+        self.retry_backoff = config.getint("GENERAL", "retry_backoff", fallback=5)
+
+        if not self.api_url:
             raise ValueError("API URL not configured.")
 
-        print(f"Attempting to send POST request to: {api_url}")
+    def send_data(self, publish_request):
+        print(f"Attempting to send POST request to: {self.api_url}")
 
         attempt = 0
-        while attempt < retries:
+        while attempt < self.retries:
             try:
-                response = requests.post(api_url, json=publish_request.toJSON())
+                response = requests.post(self.api_url, json=publish_request.toJSON())
                 if response.status_code == http.HTTPStatus.BAD_REQUEST:
                     print(f"Error: {response.json()['error']}")
                     break
                 response.raise_for_status()
-                print(f"Data uploaded successfully, it should be exposed in our UI shortly.")
+                print("Data uploaded successfully, it should be exposed in our UI shortly.")
                 break
             except requests.exceptions.RequestException as e:
                 print(f"Error sending request: {e}")
-                time.sleep(retry_backoff)
+                time.sleep(self.retry_backoff)
                 attempt += 1
         else:
-            print(f"Failed to send request after {retries} attempts.")
+            print(f"Failed to send request after {self.retries} attempts.")
 
 
 def main():
-    processor = RunResultProcessor()
-    processor.parse_arguments()
-    processor.validate_arguments()
-    publish_request = processor.create_request()
-    processor.send_data(publish_request)
+    config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+    config = read_config(config_file)
+
+    arg_parser = ArgumentParser()
+    args = arg_parser.parse_arguments()
+    arg_parser.validate_arguments()
+
+    data_loader = DataLoader(args)
+    data = data_loader.load_data()
+
+    publish_request = PublishRequestCreator.create_request(args.tool, data)
+
+    sender = RequestSender(config)
+    sender.send_data(publish_request)
 
 
 if __name__ == "__main__":
