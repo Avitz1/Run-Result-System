@@ -9,8 +9,20 @@ main = Blueprint('main', __name__)
 
 @main.route("/get_all_data", methods=["GET"])
 def get_data_per_tool():
-    data = RunResult.query.all()
-    return jsonify([{"tool": d.tool, "project": d.project, "time": d.time, "data": d.data} for d in data])
+    last_id = request.args.get('last_id', None, type=int)
+    per_page = request.args.get('per_page', 1000, type=int)  # Default to 1000 rows per page
+
+    query = RunResult.query.order_by(RunResult.id)
+    if last_id:
+        query = query.filter(RunResult.id > last_id)
+
+    query = query.limit(per_page)
+    data = query.all()
+
+    return jsonify({
+        "data": [{"id": d.id, "tool": d.tool, "project": d.project, "time": d.time, "data": d.data} for d in data],
+        "last_id": data[-1].id if data else None
+    })
 
 
 @main.route("/run_result", methods=["POST"])
