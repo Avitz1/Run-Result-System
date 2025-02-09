@@ -5,10 +5,10 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-from backend.services.schema_validations.schema_validator import validate, ValidationResult, ValidationResultEnum
+from backend.services.schema_validations.schema_validator import validate, ValidationResultEnum
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://user:password@localhost/db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 config = configparser.ConfigParser()
