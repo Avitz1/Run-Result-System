@@ -13,8 +13,9 @@ import time
 from datetime import datetime
 import pytz
 import requests
+import logging
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from model.publish_result_model import PublishResultRequest
 
@@ -64,12 +65,14 @@ class DataLoader:
             with open(file_path, "r", encoding="utf-8") as file:
                 return file.read()
         except FileNotFoundError:
+            logging.error("The result file does not exist: %s", file_path)
             raise argparse.ArgumentTypeError("The result file does not exist")
 
     def _load_from_json(self, data):
         try:
             return json.loads(data)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logging.error("The data provided is not valid JSON: %s", e)
             raise argparse.ArgumentTypeError("The data provided is not valid JSON")
 
 
@@ -91,30 +94,32 @@ class RequestSender:
         self.retry_backoff = config.getint("GENERAL", "retry_backoff", fallback=5)
 
         if not self.api_url:
+            logging.error("API URL not configured.")
             raise ValueError("API URL not configured.")
 
     def send_data(self, publish_request):
-        print(f"Attempting to send POST request to: {self.api_url}")
 
         attempt = 0
         while attempt < self.retries:
             try:
                 response = requests.post(self.api_url, json=publish_request.toJSON())
                 if response.status_code == http.HTTPStatus.BAD_REQUEST:
-                    print(f"Error: {response.json()['error']}")
+                    logging.error("Error: %s", response.json().get('error', 'Unknown error'))
                     break
                 response.raise_for_status()
-                print("Data uploaded successfully, it should be exposed in our UI shortly.")
+                logging.info("Data uploaded successfully, it should be exposed in our UI shortly.")
                 break
             except requests.exceptions.RequestException as e:
-                print(f"Error sending request: {e}")
+                logging.error("Error sending request: %s", e)
                 time.sleep(self.retry_backoff)
                 attempt += 1
         else:
-            print(f"Failed to send request after {self.retries} attempts.")
+            logging.error("Failed to send request after %d attempts.", self.retries)
 
 
 def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
     config = read_config(config_file)
 
@@ -123,7 +128,11 @@ def main():
     arg_parser.validate_arguments()
 
     data_loader = DataLoader(args)
-    data = data_loader.load_data()
+    try:
+        data = data_loader.load_data()
+    except argparse.ArgumentTypeError as e:
+        logging.critical("Error loading data: %s", e)
+        sys.exit(1)
 
     publish_request = PublishRequestCreator.create_request(args.tool, data)
 
