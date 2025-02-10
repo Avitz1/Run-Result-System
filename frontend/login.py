@@ -1,12 +1,12 @@
 from PyQt6.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from dashboard import Dashboard
 from styles import Styles
-
 
 class Login(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
-        Styles.apply_styles(self, "login")
+        Styles.apply_styles(self, "login")  # Applying login styles
 
     def init_ui(self):
         self.setWindowTitle("Login")
@@ -39,5 +39,14 @@ class Login(QWidget):
     def check_login(self):
         username = self.input_user.text()
         password = self.input_pass.text()
-        print(f"Username: {username}, Password: {password}")
 
+        if username == "admin" and password == "password":
+            self.open_dashboard()
+        else:
+            self.input_user.clear()
+            self.input_pass.clear()
+
+    def open_dashboard(self):
+        self.dashboard = Dashboard()
+        self.dashboard.show()
+        self.close()
