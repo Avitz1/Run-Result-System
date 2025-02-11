@@ -1,8 +1,8 @@
 class Pagination:
     def __init__(self, data, rows_per_page=5):
-        self.data = data  # Full dataset
-        self.rows_per_page = rows_per_page  # Number of rows per page
-        self.current_page = 1  # Start on the first page
+        self.data = data
+        self.rows_per_page = rows_per_page
+        self.current_page = 1
 
     def get_page_data(self):
         """Returns the data for the current page."""
@@ -26,10 +26,24 @@ class Pagination:
             self.current_page -= 1
         return self.get_page_data()
 
+    def go_to_page(self, page_number):
+        if 1 <= page_number <= self.total_pages():
+            self.current_page = page_number
+        return self.get_page_data()
+
     def reset(self):
         """Reset pagination to the first page."""
         self.current_page = 1
         return self.get_page_data()
 
+    def get_pagination_buttons(self):
+        total_pages = self.total_pages()
+        if total_pages <= 5:
+            return list(range(1, total_pages + 1))
 
-
+        if self.current_page <= 3:
+            return [1, 2, 3, "...", total_pages]
+        elif self.current_page >= total_pages - 2:
+            return [1, "...", total_pages - 2, total_pages - 1, total_pages]
+        else:
+            return [1, "...", self.current_page - 1, self.current_page, self.current_page + 1, "...", total_pages]
