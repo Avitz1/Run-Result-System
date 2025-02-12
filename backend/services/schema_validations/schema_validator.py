@@ -2,27 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Any, List
 
-from flask import jsonify
-
 from backend.services.tools_cache import get_cached_tool
-
-schemas = {
-    "innovus": {
-        "user": "str",
-        "project": "str",
-        "tag": "str",
-        "aberrant_cells": [[], "str"],
-        "avg_aberration": "float",
-        "edge_focus": [[], "float"]
-    },
-    "prime": {
-        "user": "str",
-        "project": "str",
-        "tag": "str",
-        "t_deviate": "float",
-        "path_type": "str"
-    }
-}
 
 
 class ValidationResultEnum(Enum):
