@@ -9,4 +9,15 @@ class RunResult(db.Model):
     data = db.Column(db.JSON)
 
     def __repr__(self):
-        return f"<RunResult {self.id} {self.tool} {self.project} {self.time} {self.data}>"
+        return (
+            f"<RunResult {self.id} {self.tool} {self.project} {self.time} {self.data}>"
+        )
+
+
+class Tool(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(16), nullable=False, index=True)
+    schema = db.Column(db.JSON)
+
+    def __repr__(self):
+        return f"<Tool {self.id} {self.name} {self.schema}>"
