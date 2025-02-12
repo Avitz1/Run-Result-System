@@ -6,13 +6,14 @@ from backend.services.schema_validations.schema_validator import (
     validate,
     ValidationResultEnum,
 )
+from .services.tools_cache import get_cached_tools
 
 main = Blueprint("main", __name__)
 
 
 @main.route("/get_tools", methods=["GET"])
 def get_tools():
-    tools = Tool.query.all()
+    tools = get_cached_tools()
     return jsonify([{"name": t.name, "schema": t.schema} for t in tools])
 
 
