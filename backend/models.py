@@ -16,7 +16,7 @@ class RunResult(db.Model):
 
 class Tool(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(16), nullable=False, index=True)
+    name = db.Column(db.String(16), nullable=False, index=True, unique=True)
     schema = db.Column(db.JSON)
 
     def __repr__(self):

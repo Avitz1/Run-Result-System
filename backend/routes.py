@@ -28,6 +28,7 @@ def add_tool():
 
 @main.route("/get_filtered_data", methods=["GET"])
 def get_filtered_data():
+
     last_id = request.args.get("last_id", None, type=int)
     per_page = request.args.get(
         "per_page", 1000, type=int
