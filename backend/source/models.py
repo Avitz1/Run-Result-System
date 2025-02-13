@@ -1,4 +1,4 @@
-from . import db
+from backend.source import db
 
 
 class RunResult(db.Model):

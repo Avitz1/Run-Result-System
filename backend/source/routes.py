@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from .models import RunResult, Tool
-from . import db
-from backend.services.schema_validations.schema_validator import (
-    validate,
-    ValidationResultEnum,
-)
-from .services.tools_cache import get_cached_tools
+
+from sqlalchemy.exc import IntegrityError
+
+from backend.source.models import RunResult, Tool
+from backend.source import db
+from backend.source.services.schema_validations.schema_validator import validate, ValidationResultEnum
+from backend.source.services.tools_cache import get_cached_tools
 
 main = Blueprint("main", __name__)
 
@@ -22,7 +22,12 @@ def add_tool():
     data = request.json
     new_tool = Tool(name=data["name"], schema=data["schema"])
     db.session.add(new_tool)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Tool with this name already exists."}), 400
+
     return {"id": new_tool.id}, 201
 
 

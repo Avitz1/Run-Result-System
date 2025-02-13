@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Any, List
 
-from backend.services.tools_cache import get_cached_tool
+from backend.source.services.tools_cache import get_cached_tool
 
 
 class ValidationResultEnum(Enum):
@@ -34,11 +34,11 @@ def validate(tool: str, data: Dict[str, Any]) -> ValidationResult:
     Validates the incoming data against the tool's schema.
     """
     tool = get_cached_tool(tool)
-    schema = tool.schema
-    if schema is None:
+    if tool is None:
         return ValidationResult(ValidationResultEnum.TOOL_NOT_FOUND,
                                 {ValidationResultEnum.TOOL_NOT_FOUND.value: "try with an existing tool"})
     else:
+        schema = tool.schema
         missing_fields = [field for field in schema if field not in data]
         if missing_fields:
             return ValidationResult(ValidationResultEnum.MISSING_FIELDS,
