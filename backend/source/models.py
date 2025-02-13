@@ -4,7 +4,7 @@ from backend.source import db
 class RunResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tool = db.Column(db.String(16), nullable=False, index=True)
-    project = db.Column(db.String(32), nullable=False, index=True)
+    project = db.Column(db.String(32), index=True)
     time = db.Column(db.DateTime, nullable=False)
     data = db.Column(db.JSON)
 

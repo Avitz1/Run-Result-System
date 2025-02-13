@@ -8,10 +8,14 @@ db = SQLAlchemy()
 cache = Cache()
 
 
-def create_app():
+def create_app(config_name=None):
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://user:password@localhost/db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    if config_name:
+        app.config.from_object(config_name)
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://user:password@localhost/db"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     config = configparser.ConfigParser()
     config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))

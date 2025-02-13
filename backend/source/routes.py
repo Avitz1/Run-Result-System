@@ -95,7 +95,10 @@ def add_data():
     if validation_result.result != ValidationResultEnum.SUCCESS:
         return {"error": validation_result.validation_errors}, 400
 
-    project = data["data"].pop("project")
+    if data["data"].get("project"):
+        project = data["data"].pop("project")
+    else:
+        project = None
 
     new_data = RunResult(
         tool=data["tool"],
