@@ -24,9 +24,15 @@ def validate_field(field: any, field_type: any) -> bool:
     Validates a single field against its type.
     """
     if isinstance(field_type, list):
-        return isinstance(field, list) and all(isinstance(item, eval(field_type[1])) for item in field)
+        elements_type = eval(field_type[1])
+        if elements_type == str:
+            return isinstance(field, list) and all(isinstance(item, str) for item in field)
+        elif elements_type == int:
+            return isinstance(field, list) and all(isinstance(item, int) for item in field)
+        elif elements_type == float:
+            return isinstance(field, list) and all(isinstance(item, int) or isinstance(item, float) for item in field)
     else:
-        return isinstance(field, field_type)
+        return isinstance(field, eval(field_type))
 
 
 def validate(tool: str, data: Dict[str, Any]) -> ValidationResult:
@@ -48,7 +54,7 @@ def validate(tool: str, data: Dict[str, Any]) -> ValidationResult:
             return ValidationResult(ValidationResultEnum.REDUNDANT_FIELDS,
                                     {ValidationResultEnum.REDUNDANT_FIELDS.value: redundant_fields})
         invalid_types = [f'field \"{field}\" should be {field_type}' for field, field_type in schema.items()
-                         if not validate_field(data[field], eval(field_type))]
+                         if not validate_field(data[field], field_type)]
         if invalid_types:
             return ValidationResult(ValidationResultEnum.INVALID_TYPES,
                                     {ValidationResultEnum.INVALID_TYPES.value: invalid_types})
