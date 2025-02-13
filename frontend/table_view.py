@@ -1,10 +1,8 @@
 from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton,
-    QHBoxLayout, QWidget, QDateEdit, QLabel
+    QHBoxLayout, QWidget
 )
 from pagination import Pagination
-from PyQt6.QtCore import QDate
-
 
 class TableView(QWidget):
     def __init__(self):
@@ -15,31 +13,10 @@ class TableView(QWidget):
         self.layout = QVBoxLayout()
         self.table = QTableWidget()
         self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Column 1", "Column 2", "Column 3", "Date"])
+        self.table.setHorizontalHeaderLabels(["Name", "Age", "Job", "Date"])
         self.table.setSortingEnabled(True)
 
         self.pagination = None
-
-        # 🔹 Date Filter UI Elements
-        self.date_layout = QHBoxLayout()
-        self.start_date_label = QLabel("Start Date:")
-        self.start_date = QDateEdit()
-        self.start_date.setCalendarPopup(True)
-        self.start_date.setDate(QDate.currentDate().addDays(-30))  # Default: 30 days ago
-
-        self.end_date_label = QLabel("End Date:")
-        self.end_date = QDateEdit()
-        self.end_date.setCalendarPopup(True)
-        self.end_date.setDate(QDate.currentDate())  # Default: Today
-
-        self.filter_button = QPushButton("Filter Data")
-        self.filter_button.clicked.connect(self.filter_data)
-
-        self.date_layout.addWidget(self.start_date_label)
-        self.date_layout.addWidget(self.start_date)
-        self.date_layout.addWidget(self.end_date_label)
-        self.date_layout.addWidget(self.end_date)
-        self.date_layout.addWidget(self.filter_button)
 
         # Pagination Buttons
         self.pagination_layout = QHBoxLayout()
@@ -55,13 +32,13 @@ class TableView(QWidget):
         self.last_button = QPushButton("Last")
         self.last_button.clicked.connect(self.go_to_last_page)
 
-        # Layout setup
+        # Layout setup for pagination buttons
         self.pagination_layout.addWidget(self.prev_button)
         self.pagination_layout.addWidget(self.first_button)
         self.pagination_layout.addWidget(self.next_button)
         self.pagination_layout.addWidget(self.last_button)
 
-        self.layout.addLayout(self.date_layout)
+        # Add table and pagination layout to the main layout
         self.layout.addWidget(self.table)
         self.layout.addLayout(self.pagination_layout)
         self.setLayout(self.layout)
@@ -69,25 +46,6 @@ class TableView(QWidget):
     def update_table(self, data):
         self.original_data = data
         self.pagination = Pagination(data)
-        self.display_page()
-
-    def filter_data(self):
-        """Filters data based on the selected date range."""
-        if not self.pagination:
-            return  # No data loaded
-
-        start_date = self.start_date.date().toString("yyyy-MM-dd")
-        end_date = self.end_date.date().toString("yyyy-MM-dd")
-
-        # Convert date string to QDate for filtering
-        filtered_data = []
-        for row in self.original_data:
-            row_date = QDate.fromString(row[3], "yyyy-MM-dd")  # Assuming Date is in 4th column
-            if row_date.isValid() and self.start_date.date() <= row_date <= self.end_date.date():
-                filtered_data.append(row)
-
-        # Update pagination with filtered data
-        self.pagination = Pagination(filtered_data)
         self.display_page()
 
     def display_page(self):
@@ -138,4 +96,3 @@ class TableView(QWidget):
     def previous_page(self):
         self.pagination.previous_page()
         self.display_page()
-

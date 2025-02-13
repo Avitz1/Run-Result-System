@@ -9,7 +9,7 @@ class Styles:
                 font-family: 'Arial', sans-serif;
             }
             QLabel {
-                color: black;
+                color: black;  /* Set text color to black */
                 margin-bottom: 10px;
             }
             QLineEdit {
@@ -135,6 +135,58 @@ class Styles:
         """
 
     @staticmethod
+    def date_picker_styles():
+        """Styles for Date Pickers"""
+        return """
+                QDateEdit {
+                    font-size: 16px;
+                    padding: 8px;
+                    border: 2px solid #ccc;
+                    border-radius: 8px;
+                    background-color: #f9f9f9;
+                }
+                QDateEdit:focus {
+                    border: 2px solid #007BFF;
+                    background-color: #ffffff;
+                }
+            """
+
+    @staticmethod
+    def clear_button_styles():
+        """Styles for the clear button"""
+        return """
+                QPushButton {
+                    border: none; 
+                    font-size: 22px; 
+                    font-weight: bold;
+                    color: red; 
+                    background-color: transparent;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    color: darkred;
+                    background-color: rgba(255, 0, 0, 0.2);  /* Light red hover effect */
+                }
+            """
+
+    @staticmethod
+    def filter_input_styles():
+        """Styles for the filter input field"""
+        return """
+                QLineEdit {
+                    font-size: 16px;
+                    padding: 5px;
+                    border: 2px solid #ccc;
+                    border-radius: 8px;
+                    background-color: #f9f9f9;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #007BFF;  /* Blue highlight on focus */
+                    background-color: #ffffff;
+                }
+            """
+
+    @staticmethod
     def apply_styles(widget, style_name):
         """Applies the appropriate style to the given widget"""
         if style_name == "login":
@@ -143,3 +195,9 @@ class Styles:
             widget.setStyleSheet(Styles.dashboard_styles())
         elif style_name == "table":
             widget.setStyleSheet(Styles.table_styles())
+        elif style_name == "date_picker":
+            widget.setStyleSheet(Styles.date_picker_styles())
+        elif style_name == "clear_button":
+            widget.setStyleSheet(Styles.clear_button_styles())
+        elif style_name == "filter_input":
+            widget.setStyleSheet(Styles.filter_input_styles())
