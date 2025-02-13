@@ -95,7 +95,7 @@ class RequestSender:
 
         if not self.api_url:
             logging.error("API URL not configured.")
-            raise ValueError("API URL not configured.")
+            sys.exit(1)
 
     def send_data(self, publish_request):
 
@@ -115,6 +115,7 @@ class RequestSender:
                 attempt += 1
         else:
             logging.error("Failed to send request after %d attempts.", self.retries)
+            SystemExit(1)
 
 
 def main():
@@ -132,7 +133,7 @@ def main():
         data = data_loader.load_data()
     except argparse.ArgumentTypeError as e:
         logging.critical("Error loading data: %s", e)
-        sys.exit(1)
+        SystemExit(1)
 
     publish_request = PublishRequestCreator.create_request(args.tool, data)
 

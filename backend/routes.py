@@ -32,7 +32,7 @@ def get_filtered_data():
     last_id = request.args.get("last_id", None, type=int)
     per_page = request.args.get(
         "per_page", 1000, type=int
-    )  # Default to 1000 rows per page
+    )
     start_date = request.args.get("start_date", None)
     end_date = request.args.get("end_date", None)
     tool = request.args.get("tool", None)

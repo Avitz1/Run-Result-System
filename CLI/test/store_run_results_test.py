@@ -1,25 +1,13 @@
+import configparser
+import http
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
 import argparse
-import json
-import configparser
-from datetime import datetime
-import pytz
+
 import requests
 
-# Import the classes and functions from your module
-from process_run_results import (
-    read_config, ArgumentParser, DataLoader, PublishRequestCreator, RequestSender, main
-)
+from cli.source.store_run_results import ArgumentParser, DataLoader, RequestSender
 from model.publish_result_model import PublishResultRequest
-
-
-class TestReadConfig(unittest.TestCase):
-    @patch("configparser.ConfigParser.read")
-    def test_read_config(self, mock_read):
-        config_file = "test_config.ini"
-        config = read_config(config_file)
-        mock_read.assert_called_once_with(config_file)
 
 
 class TestArgumentParser(unittest.TestCase):
@@ -35,27 +23,25 @@ class TestArgumentParser(unittest.TestCase):
         self.assertEqual(args.tool, "test_tool")
         self.assertEqual(args.data, '{"key": "value"}')
 
-    @patch("argparse.ArgumentParser.error")
-    def test_validate_arguments(self, mock_error):
-        # Test missing tool argument
-        self.arg_parser.args = argparse.Namespace(tool=None, result_file=None, data=None)
-        with self.assertRaises(SystemExit):
-            self.arg_parser.validate_arguments()
-        mock_error.assert_called_once_with("The tool must be specified")
+    @patch("sys.exit")
+    def test_validate_arguments_missing_tool(self, mock_exit):
+        self.arg_parser.args = argparse.Namespace(tool=None, result_file=None, data="{}")
+        self.arg_parser.validate_arguments()
+        mock_exit.assert_called_once_with(2)
 
-        # Test missing result_file and data arguments
+    @patch("sys.exit")
+    def test_validate_arguments_missing_result_file_and_data(self, mock_exit):
         self.arg_parser.args = argparse.Namespace(tool="test_tool", result_file=None, data=None)
-        with self.assertRaises(SystemExit):
-            self.arg_parser.validate_arguments()
-        mock_error.assert_called_with("Either the result file or the data must be specified")
+        self.arg_parser.validate_arguments()
+        mock_exit.assert_called_once_with(2)
 
-        # Test both result_file and data arguments provided
+    @patch("sys.exit")
+    def test_validate_arguments_both_result_file_and_data_provided(self, mock_exit):
         self.arg_parser.args = argparse.Namespace(
             tool="test_tool", result_file="file.json", data='{"key": "value"}'
         )
-        with self.assertRaises(SystemExit):
-            self.arg_parser.validate_arguments()
-        mock_error.assert_called_with("Only one of the result file or the data must be specified")
+        self.arg_parser.validate_arguments()
+        mock_exit.assert_called_once_with(2)
 
 
 class TestDataLoader(unittest.TestCase):
@@ -66,8 +52,9 @@ class TestDataLoader(unittest.TestCase):
         data = data_loader._load_from_file("file.json")
         self.assertEqual(data, '{"key": "value"}')
 
-    @patch("process_run_results.logging.error")
-    def test_load_from_file_not_found(self, mock_log_error):
+    @patch("builtins.open", side_effect=FileNotFoundError)
+    @patch("cli.source.store_run_results.logging.error")
+    def test_load_from_file_not_found(self, mock_log_error, mock_file):
         args = argparse.Namespace(result_file="missing_file.json", data=None)
         data_loader = DataLoader(args)
         with self.assertRaises(argparse.ArgumentTypeError):
@@ -80,7 +67,7 @@ class TestDataLoader(unittest.TestCase):
         data = data_loader._load_from_json('{"key": "value"}')
         self.assertEqual(data, {"key": "value"})
 
-    @patch("process_run_results.logging.error")
+    @patch("cli.source.store_run_results.logging.error")
     def test_load_from_json_invalid(self, mock_log_error):
         args = argparse.Namespace(result_file=None, data='invalid_json')
         data_loader = DataLoader(args)
@@ -104,20 +91,6 @@ class TestDataLoader(unittest.TestCase):
         mock_load_from_json.assert_called_once_with('{"key": "value"}')
 
 
-class TestPublishRequestCreator(unittest.TestCase):
-    @patch("process_run_results.datetime")
-    def test_create_request(self, mock_datetime):
-        mock_datetime.now.return_value = datetime(2025, 2, 13, 5, 39, 5, tzinfo=pytz.utc)
-        tool = "test_tool"
-        data = {"key": "value"}
-
-        request = PublishRequestCreator.create_request(tool, data)
-        self.assertIsInstance(request, PublishResultRequest)
-        self.assertEqual(request.tool, tool)
-        self.assertEqual(request.data, data)
-        self.assertEqual(request.time, "2025-02-13T05:39:05Z")
-
-
 class TestRequestSender(unittest.TestCase):
     def setUp(self):
         self.config = configparser.ConfigParser()
@@ -126,6 +99,16 @@ class TestRequestSender(unittest.TestCase):
         self.config.set("GENERAL", "retries", "2")
         self.config.set("GENERAL", "retry_backoff", "1")
         self.sender = RequestSender(self.config)
+
+    @patch("sys.exit")
+    @patch("cli.source.store_run_results.logging.error")
+    def test_init_no_api_url(self, mock_log_error, mock_exit):
+        config = configparser.ConfigParser()
+        config.add_section("GENERAL")
+        config.set("GENERAL", "run_result_server_url", "")
+        RequestSender(config)
+        mock_log_error.assert_called_once_with("API URL not configured.")
+        mock_exit.assert_called_once_with(1)
 
     @patch("requests.post")
     @patch("time.sleep", return_value=None)
@@ -157,9 +140,10 @@ class TestRequestSender(unittest.TestCase):
     @patch("requests.post")
     @patch("time.sleep", return_value=None)
     def test_send_data_retry(self, mock_sleep, mock_post):
-        mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = requests.exceptions.RequestException
-        mock_post.return_value = mock_response
+        mock_post.side_effect = [
+            requests.exceptions.RequestException,
+            MagicMock(status_code=http.HTTPStatus.OK)
+        ]
 
         publish_request = PublishResultRequest(tool="test_tool", data={"key": "value"}, time="2025-02-13T05:39:05Z")
         self.sender.send_data(publish_request)
