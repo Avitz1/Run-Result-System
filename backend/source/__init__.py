@@ -19,9 +19,6 @@ def create_app():
     db.init_app(app)
     cache.init_app(app)
 
-    with app.app_context():
-        db.create_all()
-
     from backend.source.routes import main
     app.register_blueprint(main)
 
