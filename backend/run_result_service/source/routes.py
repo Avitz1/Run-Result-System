@@ -5,10 +5,10 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 from kafka import KafkaProducer
-from backend.run_result_service.source.models import RunResult, Tool
-from backend.run_result_service.source import db
-from backend.run_result_service.source.schema_validations.schema_validator import validate, ValidationResultEnum
-from backend.run_result_service.source.tools_cache import get_cached_tools
+from .models import RunResult, Tool
+from . import db
+from .schema_validations.schema_validator import validate, ValidationResultEnum
+from .tools_cache import get_cached_tools
 
 main = Blueprint("main", __name__)
 

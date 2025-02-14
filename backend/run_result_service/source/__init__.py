@@ -25,7 +25,7 @@ def create_app(config_name=None):
     db.init_app(app)
     cache.init_app(app)
 
-    from backend.run_result_service.source.routes import main
+    from .routes import main
     app.register_blueprint(main)
 
     return app

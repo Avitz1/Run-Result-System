@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from backend.run_result_service.source import db
+from . import db
 
 
 class RunResult(db.Model):
