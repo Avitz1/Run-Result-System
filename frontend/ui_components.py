@@ -40,6 +40,7 @@ class TableView:
     def __init__(self, parent):
         self.table = QTableWidget()
         self.table.horizontalHeader().sectionClicked.connect(parent.event_handlers.sort_data)
+        self.table.setToolTip("Click on a column header to sort the data by that column.")
         self.data = []
         self.columns = []
 
