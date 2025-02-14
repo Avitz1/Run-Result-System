@@ -1,5 +1,3 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QLineEdit, QDateEdit
-
 class Styles:
     @staticmethod
     def apply_styles(widget, style_type):
