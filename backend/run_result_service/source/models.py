@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from backend.run_result_service.source import db
 
@@ -26,6 +27,14 @@ class RunResult(db.Model):
 
     def to_json(self):
         return json.dumps(self.to_dict())
+
+    def from_dict(data):
+        return RunResult(
+            tool=data["tool"],
+            project=data["project"],
+            time=datetime.strptime(data["time"], '%Y-%m-%d %H:%M:%S'),
+            data=data["data"]
+        )
 
 
 class Tool(db.Model):
