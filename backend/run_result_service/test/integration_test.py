@@ -1,8 +1,8 @@
 import os
 import unittest
 import json
-from backend.source import create_app, db
-from backend.source.models import Tool
+from backend.run_result_service.source import create_app, db
+from backend.run_result_service.source.models import Tool
 from datetime import datetime
 
 
@@ -71,9 +71,9 @@ class FlaskTestCase(unittest.TestCase):
             "time": datetime.utcnow().isoformat() + 'Z'
         }
         response = self.client.post('/run_result', json=data)
-        self.assertEqual(response.status_code, 201)
-        data = json.loads(response.data)
-        self.assertIn('id', data)
+        self.assertEqual(response.status_code, 200)
+        kafka_metadata = response.json["kafka_metadata"]
+        self.assertIn('topic', kafka_metadata)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,7 @@
-from backend.source import db
+import json
+from datetime import datetime
+
+from . import db
 
 
 class RunResult(db.Model):
@@ -11,6 +14,26 @@ class RunResult(db.Model):
     def __repr__(self):
         return (
             f"<RunResult {self.id} {self.tool} {self.project} {self.time} {self.data}>"
+        )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'tool': self.tool,
+            'project': self.project,
+            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'data': self.data
+        }
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
+    def from_dict(data):
+        return RunResult(
+            tool=data["tool"],
+            project=data["project"],
+            time=datetime.strptime(data["time"], '%Y-%m-%d %H:%M:%S'),
+            data=data["data"]
         )
 
 

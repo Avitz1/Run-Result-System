@@ -1,4 +1,4 @@
-from backend.source import create_app
+from backend.run_result_service.source import create_app
 
 app = create_app()
 
