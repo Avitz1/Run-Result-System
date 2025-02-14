@@ -1,14 +1,23 @@
+import json
+
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
-
+from kafka import KafkaProducer
 from backend.source.models import RunResult, Tool
 from backend.source import db
 from backend.source.services.schema_validations.schema_validator import validate, ValidationResultEnum
 from backend.source.services.tools_cache import get_cached_tools
 
 main = Blueprint("main", __name__)
+
+producer = KafkaProducer(
+    bootstrap_servers='localhost:29092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+    request_timeout_ms=1000,
+    retries=3
+)
 
 
 @main.route("/get_tools", methods=["GET"])
@@ -106,6 +115,16 @@ def add_data():
         time=datetime.fromisoformat(data["time"].replace("Z", "+00:00")),
         data=data["data"],
     )
-    db.session.add(new_data)
-    db.session.commit()
-    return {"id": new_data.id}, 201
+
+    future = producer.send('run-results', new_data.to_json())
+    result = future.get(timeout=3)
+    kafka_metadata = {
+        'topic': result.topic,
+        'partition': result.partition,
+        'offset': result.offset,
+        'timestamp': result.timestamp
+    }
+
+    producer.flush()
+
+    return jsonify({"kafka_metadata": kafka_metadata}), 200

@@ -16,6 +16,8 @@ def create_app(config_name=None):
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://user:password@localhost/db"
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        app.config["CACHE_TYPE"] = "simple"
+        app.config["CACHE_DEFAULT_TIMEOUT"] = 1
 
     config = configparser.ConfigParser()
     config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))

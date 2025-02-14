@@ -26,6 +26,8 @@ class RunResultClient:
                     break
                 response.raise_for_status()
                 logging.info("Data uploaded successfully, it should be exposed in our UI shortly.")
+                kafka_metadata = response.json().get('kafka_metadata')
+                logging.info("Kafka metadata: %s", kafka_metadata)
                 break
             except requests.exceptions.RequestException as e:
                 logging.error("Error sending request: %s", e)

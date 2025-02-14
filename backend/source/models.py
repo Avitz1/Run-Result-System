@@ -1,3 +1,5 @@
+import json
+
 from backend.source import db
 
 
@@ -12,6 +14,18 @@ class RunResult(db.Model):
         return (
             f"<RunResult {self.id} {self.tool} {self.project} {self.time} {self.data}>"
         )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'tool': self.tool,
+            'project': self.project,
+            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
+            'data': self.data
+        }
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
 
 
 class Tool(db.Model):
