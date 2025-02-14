@@ -1,6 +1,6 @@
 import json
 
-from backend.source import db
+from backend.run_result_service.source import db
 
 
 class RunResult(db.Model):
