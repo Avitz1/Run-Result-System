@@ -13,18 +13,16 @@ class RunResult(db.Model):
     data = db.Column(db.JSON)
 
     def __repr__(self):
-        return (
-            f"<RunResult {self.id} {self.tool} {self.project} {self.user} {self.time} {self.data}>"
-        )
+        return f"<RunResult {self.id} {self.tool} {self.project} {self.user} {self.time} {self.data}>"
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'tool': self.tool,
-            'project': self.project,
-            'user': self.user,
-            'time': self.time.strftime('%Y-%m-%d %H:%M:%S'),
-            'data': self.data
+            "id": self.id,
+            "tool": self.tool,
+            "project": self.project,
+            "user": self.user,
+            "time": self.time.strftime("%Y-%m-%d %H:%M:%S"),
+            "data": self.data,
         }
 
     def to_json(self):
@@ -35,8 +33,8 @@ class RunResult(db.Model):
             tool=data["tool"],
             project=data["project"],
             user=data["user"],
-            time=datetime.strptime(data["time"], '%Y-%m-%d %H:%M:%S'),
-            data=data["data"]
+            time=datetime.strptime(data["time"], "%Y-%m-%d %H:%M:%S"),
+            data=data["data"],
         )
 
 

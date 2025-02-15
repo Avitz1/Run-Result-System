@@ -14,7 +14,9 @@ class DataHandler:
 
     @staticmethod
     def get_fields(tool_name):
-        response = requests.get(f"{DataHandler.BASE_URL}/get_tool_schema", params={"name": tool_name})
+        response = requests.get(
+            f"{DataHandler.BASE_URL}/get_tool_schema", params={"name": tool_name}
+        )
         if response.status_code == 200:
             tool = response.json()
             return tool["schema"]
@@ -30,10 +32,17 @@ class DataHandler:
             "last_id": last_id,
             "per_page": 4,
         }
-        response = requests.get(f"{DataHandler.BASE_URL}/get_filtered_data", params=params)
+        response = requests.get(
+            f"{DataHandler.BASE_URL}/get_filtered_data", params=params
+        )
         if response.status_code == 200:
             data = response.json()
             columns = [key for key in data["data"][0].keys() if key != "id"]
-            return data["data"], columns, data["last_id"], (len(data["data"]) + 3) // 4  # Adjust as needed
+            return (
+                data["data"],
+                columns,
+                data["last_id"],
+                (len(data["data"]) + 3) // 4,
+            )  # Adjust as needed
         else:
             return [], [], None, 0

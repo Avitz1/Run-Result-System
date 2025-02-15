@@ -11,4 +11,10 @@ class PublishResultRequest:
         self.__time = time
 
     def to_json(self):
-        return {"tool": self.__tool, "project": self.__project, "user": self.__user, "data": self.__data, "time": self.__time}
+        return {
+            "tool": self.__tool,
+            "project": self.__project,
+            "user": self.__user,
+            "data": self.__data,
+            "time": self.__time,
+        }

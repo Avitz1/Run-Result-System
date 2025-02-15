@@ -13,10 +13,10 @@ from .tools_cache import get_cached_tools, get_cached_tool
 main = Blueprint("main", __name__)
 
 producer = KafkaProducer(
-    bootstrap_servers='localhost:29092',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+    bootstrap_servers="localhost:29092",
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     request_timeout_ms=1000,
-    retries=3
+    retries=3,
 )
 
 
@@ -54,9 +54,7 @@ def add_tool():
 def get_filtered_data():
 
     last_id = request.args.get("last_id", None, type=int)
-    per_page = request.args.get(
-        "per_page", 1000, type=int
-    )
+    per_page = request.args.get("per_page", 1000, type=int)
     tool = request.args.get("tool", None)
     user = request.args.get("user", None)
     project = request.args.get("project", None)
@@ -113,13 +111,13 @@ def add_data():
         data=data["data"],
     )
 
-    future = producer.send('run-results', new_data.to_json())
+    future = producer.send("run-results", new_data.to_json())
     result = future.get(timeout=3)
     kafka_metadata = {
-        'topic': result.topic,
-        'partition': result.partition,
-        'offset': result.offset,
-        'timestamp': result.timestamp
+        "topic": result.topic,
+        "partition": result.partition,
+        "offset": result.offset,
+        "timestamp": result.timestamp,
     }
 
     producer.flush()

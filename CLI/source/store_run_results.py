@@ -16,13 +16,15 @@ from utils.data_loader import DataLoader
 from utils.run_result_client import RunResultClient
 from model.publish_result_model import PublishResultRequest
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
 
-    config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+    config_file = os.path.join(os.path.dirname(__file__), "config.ini")
     config = configparser.ConfigParser()
     config.read(config_file)
 
@@ -40,12 +42,18 @@ def main():
     except argparse.ArgumentTypeError as e:
         logging.error("Error loading data: %s", e)
         sys.exit(1)
-    project = data.get('project')
-    user = data.get('user')
+    project = data.get("project")
+    user = data.get("user")
     if not project or not user:
         logging.error("Project and user must be provided")
         sys.exit(1)
-    publish_request = PublishResultRequest(tool=args.tool, data=data, project=project, user=user, time=datetime.now(pytz.utc).isoformat())
+    publish_request = PublishResultRequest(
+        tool=args.tool,
+        data=data,
+        project=project,
+        user=user,
+        time=datetime.now(pytz.utc).isoformat(),
+    )
 
     client = RunResultClient(config)
     try:
