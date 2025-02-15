@@ -40,8 +40,12 @@ def main():
     except argparse.ArgumentTypeError as e:
         logging.error("Error loading data: %s", e)
         sys.exit(1)
-
-    publish_request = PublishResultRequest(tool=args.tool, data=data, time=datetime.now(pytz.utc).isoformat())
+    project = data.get('project')
+    user = data.get('user')
+    if not project or not user:
+        logging.error("Project and user must be provided")
+        sys.exit(1)
+    publish_request = PublishResultRequest(tool=args.tool, data=data, project=project, user=user, time=datetime.now(pytz.utc).isoformat())
 
     client = RunResultClient(config)
     try:

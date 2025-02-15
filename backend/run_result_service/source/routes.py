@@ -8,7 +8,7 @@ from kafka import KafkaProducer
 from .models import RunResult, Tool
 from . import db
 from .schema_validations.schema_validator import validate, ValidationResultEnum
-from .tools_cache import get_cached_tools
+from .tools_cache import get_cached_tools, get_cached_tool
 
 main = Blueprint("main", __name__)
 
@@ -24,6 +24,16 @@ producer = KafkaProducer(
 def get_tools():
     tools = get_cached_tools()
     return jsonify([{"name": t.name, "schema": t.schema} for t in tools])
+
+
+@main.route("/get_tool_schema", methods=["GET"])
+def get_tool():
+    tool_name = request.args.get("name")
+    tool = get_cached_tool(tool_name)
+    if not tool:
+        return jsonify({"error": "Tool not found."}), 404
+
+    return jsonify({"name": tool.name, "schema": tool.schema})
 
 
 @main.route("/admin/add_tool", methods=["POST"])
@@ -47,28 +57,18 @@ def get_filtered_data():
     per_page = request.args.get(
         "per_page", 1000, type=int
     )
-    start_date = request.args.get("start_date", None)
-    end_date = request.args.get("end_date", None)
     tool = request.args.get("tool", None)
-    username = request.args.get("username", None)
+    user = request.args.get("user", None)
     project = request.args.get("project", None)
+
+    # TODO additional fields
 
     query = RunResult.query
 
-    if (start_date and not end_date) or (not start_date and end_date):
-        return jsonify({"error": "Both start_date and end_date must be provided."}), 400
-
     if last_id:
         query = query.filter(RunResult.id > last_id)
-    if start_date and end_date:
-        try:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date, "%Y-%m-%d")
-            query = query.filter(RunResult.time.between(start_date, end_date))
-        except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
-    if username:
-        query = query.filter_by(username=username)
+    if user:
+        query = query.filter_by(user=user)
     if tool:
         query = query.filter_by(tool=tool)
     if project:
@@ -86,6 +86,7 @@ def get_filtered_data():
                     "id": d.id,
                     "tool": d.tool,
                     "project": d.project,
+                    "user": d.user,
                     "time": d.time.isoformat(),
                     "data": d.data,
                 }
@@ -104,14 +105,10 @@ def add_data():
     if validation_result.result != ValidationResultEnum.SUCCESS:
         return {"error": validation_result.validation_errors}, 400
 
-    if data["data"].get("project"):
-        project = data["data"].pop("project")
-    else:
-        project = None
-
     new_data = RunResult(
         tool=data["tool"],
-        project=project,
+        project=data["project"],
+        user=data["user"],
         time=datetime.fromisoformat(data["time"].replace("Z", "+00:00")),
         data=data["data"],
     )
