@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, JSON
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, JSON, select
 from sqlalchemy.orm import sessionmaker
 from database.config import DATABASE_URL
 
@@ -18,18 +18,31 @@ class Database:
         self.session = self.Session()
 
     def store_run_result(self, tool_name, result_data):
-        self.session.execute(self.run_results.insert().values(tool=tool_name, result=result_data))
+        self.session.execute(self.run_results
+                             .insert()
+                             .values(tool=tool_name, result=result_data))
         self.session.commit()
 
     def fetch_tools(self):
-        query = self.session.query(self.run_results.c.tool).distinct()
+        query = (self.session
+                 .query(self.run_results.c.tool)
+                 .distinct())
         return [row[0] for row in query.all()]
 
-    def fetch_results(self, tool_name, user_filter=None, tag_filter=None):
-        query = self.session.query(self.run_results)
-        query = query.filter(self.run_results.c.tool == tool_name)
-        if user_filter:
-            query = query.filter(self.run_results.c.result['user'].astext == user_filter)
-        if tag_filter:
-            query = query.filter(self.run_results.c.result['tag'].astext.like(f"%{tag_filter}%"))
+    def fetch_results(self, tool_name, filters=None):
+        query = (self.session
+                 .query(self.run_results)
+                 .filter(self.run_results.c.tool == tool_name))
+        if filters:
+            for field, value in filters.items():
+                query = query.filter(self.run_results.c.result[field].ilike(f"%{value}%"))
         return query.all()
+
+    def fetch_schema(self, tool_name):
+        query = (select(self.run_results)
+                 .where(self.run_results.c.tool == tool_name)
+                 .limit(1))
+        result = self.session.execute(query).fetchone()
+        if result and result.result:
+            return result.result
+        return []

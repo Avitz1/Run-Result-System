@@ -1,5 +1,6 @@
+import json
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QPushButton, QLabel, QFormLayout
 from PyQt5.QtCore import Qt
 from database.database_client import Database
 
@@ -20,8 +21,16 @@ class Dashboard(QMainWindow):
 
         self.tool_combo = QComboBox()
         self.tool_combo.addItem("Select a tool")
-        self.tool_combo.currentIndexChanged.connect(self.load_data)
+        self.tool_combo.currentIndexChanged.connect(self.load_schema)
         layout.addWidget(self.tool_combo)
+
+        self.filter_layout = QFormLayout()
+        self.filters = {}
+        layout.addLayout(self.filter_layout)
+
+        self.search_button = QPushButton("Search")
+        self.search_button.clicked.connect(self.load_data)
+        layout.addWidget(self.search_button)
 
         self.table = QTableWidget()
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -35,6 +44,26 @@ class Dashboard(QMainWindow):
         for tool in tools:
             self.tool_combo.addItem(tool)
 
+    def load_schema(self):
+        tool_name = self.tool_combo.currentText()
+        if tool_name == "Select a tool":
+            self.filter_layout.setParent(None)
+            self.filters = {}
+            return
+
+        schema = self.db.fetch_schema(tool_name)
+        self.filters = {}
+        self.filter_layout.setParent(None)
+        self.filter_layout = QFormLayout()
+
+        for field, value in schema.items():
+            if isinstance(value, str):
+                line_edit = QLineEdit()
+                self.filters[field] = line_edit
+                self.filter_layout.addRow(QLabel(field), line_edit)
+
+        self.centralWidget().layout().insertLayout(1, self.filter_layout)
+
     def load_data(self):
         tool_name = self.tool_combo.currentText()
         if tool_name == "Select a tool":
@@ -42,7 +71,8 @@ class Dashboard(QMainWindow):
             self.table.setColumnCount(0)
             return
 
-        results = self.db.fetch_results(tool_name)
+        filters = {field: edit.text() for field, edit in self.filters.items() if edit.text()}
+        results = self.db.fetch_results(tool_name, filters)
         if not results:
             self.table.setRowCount(0)
             self.table.setColumnCount(0)
