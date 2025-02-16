@@ -1,6 +1,5 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QPushButton, QLabel, QFormLayout
-from PyQt5.QtCore import Qt
 from database.database_client import Database
 
 
@@ -44,6 +43,7 @@ class Dashboard(QMainWindow):
             self.tool_combo.addItem(tool)
 
     def load_schema(self):
+        self.clear_table()
         self.clear_filters()
         tool_name = self.tool_combo.currentText()
         if tool_name == "Select a tool":
@@ -66,18 +66,20 @@ class Dashboard(QMainWindow):
                 widget.setParent(None)
         self.filters = {}
 
+    def clear_table(self):
+        self.table.setRowCount(0)
+        self.table.setColumnCount(0)
+
     def load_data(self):
         tool_name = self.tool_combo.currentText()
         if tool_name == "Select a tool":
-            self.table.setRowCount(0)
-            self.table.setColumnCount(0)
+            self.clear_table()
             return
 
         filters = {field: edit.text() for field, edit in self.filters.items() if edit.text()}
         results = self.db.fetch_results(tool_name, filters)
         if not results:
-            self.table.setRowCount(0)
-            self.table.setColumnCount(0)
+            self.clear_table()
             return
 
         sample_result = results[0].result
