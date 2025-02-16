@@ -10,7 +10,7 @@ class TestDataLoader(unittest.TestCase):
     def test_load_from_file(self, mock_file):
         args = argparse.Namespace(result_file="file.json", data=None)
         data_loader = DataLoader(args)
-        data = data_loader._load_from_file("file.json")
+        data = _load_from_file("file.json")
         self.assertEqual(data, '{"key": "value"}')
 
     @patch("builtins.open", side_effect=FileNotFoundError)
@@ -19,13 +19,13 @@ class TestDataLoader(unittest.TestCase):
         args = argparse.Namespace(result_file="missing_file.json", data=None)
         data_loader = DataLoader(args)
         with self.assertRaises(argparse.ArgumentTypeError):
-            data_loader._load_from_file("missing_file.json")
+            _load_from_file("missing_file.json")
         mock_log_error.assert_called_with("The result file does not exist: %s", "missing_file.json")
 
     def test_load_from_json(self):
         args = argparse.Namespace(result_file=None, data='{"key": "value"}')
         data_loader = DataLoader(args)
-        data = data_loader._load_from_json('{"key": "value"}')
+        data = _load_from_json('{"key": "value"}')
         self.assertEqual(data, {"key": "value"})
 
     @patch("cli.source.utils.data_loader.logging.error")
@@ -33,7 +33,7 @@ class TestDataLoader(unittest.TestCase):
         args = argparse.Namespace(result_file=None, data='invalid_json')
         data_loader = DataLoader(args)
         with self.assertRaises(argparse.ArgumentTypeError):
-            data_loader._load_from_json('invalid_json')
+            _load_from_json('invalid_json')
         mock_log_error.assert_called_with("The data provided is not valid JSON: %s", unittest.mock.ANY)
 
     @patch.object(DataLoader, "_load_from_file")
