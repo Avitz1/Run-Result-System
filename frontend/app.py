@@ -1,5 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt
 from database.database_client import Database
 
 
@@ -24,6 +25,7 @@ class Dashboard(QMainWindow):
 
         self.table = QTableWidget()
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.setSortingEnabled(True)
         layout.addWidget(self.table)
 
         self.load_tools()
