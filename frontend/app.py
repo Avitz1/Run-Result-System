@@ -57,13 +57,11 @@ class Dashboard(QMainWindow):
                 self.filters[field] = line_edit
                 self.filter_layout.addRow(QLabel(field), line_edit)
 
-        self.centralWidget().layout().insertLayout(1, self.filter_layout)
-
     def clear_filters(self):
-        for i in reversed(range(self.filter_layout.count())):
-            widget = self.filter_layout.itemAt(i).widget()
-            if widget is not None:
-                widget.setParent(None)
+        while self.filter_layout.count():
+            child = self.filter_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
         self.filters = {}
 
     def clear_table(self):
@@ -92,6 +90,7 @@ class Dashboard(QMainWindow):
             self.table.setItem(row_idx, 0, QTableWidgetItem(str(result.id)))
             for col_idx, key in enumerate(columns, start=1):
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(result.result[key])))
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
