@@ -1,4 +1,3 @@
-import argparse
 import json
 import logging
 
@@ -9,24 +8,22 @@ class DataLoader:
 
     def load_data(self):
         if self.args.result_file:
-            return _load_from_file(self.args.result_file)
+            return _load_json(self.args.result_file, from_file=True)
         if self.args.data:
-            return _load_from_json(self.args.data)
+            return _load_json(self.args.data, from_file=False)
         return None
 
 
-def _load_from_file(file_path):
+def _load_json(source, from_file):
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            return file.read()
+        if from_file:
+            with open(source) as file:
+                return json.load(file)
+        else:
+            return json.loads(source)
     except FileNotFoundError:
-        logging.error("The result file does not exist: %s", file_path)
+        logging.error("The result file does not exist: %s", source)
         return None
-
-
-def _load_from_json(data):
-    try:
-        return json.loads(data)
     except json.JSONDecodeError as e:
         logging.error("The data provided is not valid JSON: %s", e)
         return None

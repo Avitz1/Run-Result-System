@@ -13,7 +13,7 @@ class ToolRegistry:
         if tool_name in cls._tools:
             return cls._tools[tool_name]
         else:
-            raise ValueError(f"Unknown tool: {tool_name}")
+            return None
 
 
 ToolRegistry.register_tool('innovus', Tool({

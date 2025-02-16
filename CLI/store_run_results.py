@@ -15,6 +15,9 @@ from database.database_client import Database
 
 def store_run_result(tool_name, result_data):
     tool = ToolRegistry.get_tool(tool_name)
+    if tool is None:
+        logging.error("Tool %s is not registered", tool_name)
+        sys.exit(1)
     tool.validate_result(result_data)
     db = Database()
     db.store_run_result(tool_name, result_data)
@@ -37,7 +40,6 @@ def main():
     data = data_loader.load_data()
 
     if data is None:
-        logging.error("Error loading data")
         sys.exit(1)
 
     store_run_result(args.tool, data)
