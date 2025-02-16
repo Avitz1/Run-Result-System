@@ -4,25 +4,26 @@ It can read results from a file or directly from provided JSON data.
 """
 
 import argparse
-import configparser
-import json
-import os
 import sys
 import logging
 
+from tools.tools_registry import ToolRegistry
 from utils.argument_parser import ArgumentParser
 from utils.data_loader import DataLoader
 from database.database_client import Database
+
+
+def store_run_result(tool_name, result_data):
+    tool = ToolRegistry.get_tool(tool_name)
+    tool.validate_result(result_data)
+    db = Database()
+    db.store_run_result(tool_name, result_data)
 
 
 def main():
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
-
-    config_file = os.path.join(os.path.dirname(__file__), "config.ini")
-    config = configparser.ConfigParser()
-    config.read(config_file)
 
     arg_parser = ArgumentParser()
     try:
@@ -33,13 +34,13 @@ def main():
         sys.exit(1)
 
     data_loader = DataLoader(args)
-    try:
-        data = data_loader.load_data()
-    except FileNotFoundError or json.JSONDecodeError as e:
-        logging.error("Error loading data: %s", e)
+    data = data_loader.load_data()
+
+    if data is None:
+        logging.error("Error loading data")
         sys.exit(1)
 
-    Database().store_run_result(args.tool, data)
+    store_run_result(args.tool, data)
 
 
 if __name__ == "__main__":

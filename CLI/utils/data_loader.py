@@ -21,7 +21,7 @@ def _load_from_file(file_path):
             return file.read()
     except FileNotFoundError:
         logging.error("The result file does not exist: %s", file_path)
-        raise FileNotFoundError(f"The result file does not exist: {file_path}")
+        return None
 
 
 def _load_from_json(data):
@@ -29,4 +29,4 @@ def _load_from_json(data):
         return json.loads(data)
     except json.JSONDecodeError as e:
         logging.error("The data provided is not valid JSON: %s", e)
-        raise json.JSONDecodeError(f"The data provided is not valid JSON: {e}", e.doc, e.pos)
+        return None
