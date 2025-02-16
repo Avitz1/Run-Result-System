@@ -21,8 +21,13 @@ class Database:
         self.session.execute(self.run_results.insert().values(tool=tool_name, result=result_data))
         self.session.commit()
 
-    def fetch_results(self, user_filter=None, tag_filter=None):
+    def fetch_tools(self):
+        query = self.session.query(self.run_results.c.tool).distinct()
+        return [row[0] for row in query.all()]
+
+    def fetch_results(self, tool_name, user_filter=None, tag_filter=None):
         query = self.session.query(self.run_results)
+        query = query.filter(self.run_results.c.tool == tool_name)
         if user_filter:
             query = query.filter(self.run_results.c.result['user'].astext == user_filter)
         if tag_filter:
