@@ -17,10 +17,15 @@ def store_run_result(tool_name, result_data):
     tool = ToolRegistry.get_tool(tool_name)
     if tool is None:
         logging.error("Tool %s is not registered", tool_name)
-        sys.exit(1)
-    tool.validate_result(result_data)
-    db = Database()
-    db.store_run_result(tool_name, result_data)
+        return False
+    try:
+        tool.validate_result(result_data)
+        db = Database()
+        db.store_run_result(tool_name, result_data)
+        return True
+    except Exception as e:
+        logging.error("Failed to store run result: %s", e)
+        return False
 
 
 def main():
@@ -42,7 +47,8 @@ def main():
     if data is None:
         sys.exit(1)
 
-    store_run_result(args.tool, data)
+    if not store_run_result(args.tool, data):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
