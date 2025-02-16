@@ -46,16 +46,15 @@ class Dashboard(QMainWindow):
             self.table.setColumnCount(0)
             return
 
-        # Dynamically set columns based on JSON keys
         sample_result = results[0].result
-        columns = ["ID"] + list(sample_result.keys())
+        columns = list(sample_result.keys())
         self.table.setColumnCount(len(columns))
         self.table.setHorizontalHeaderLabels(columns)
 
         self.table.setRowCount(len(results))
         for row_idx, result in enumerate(results):
             self.table.setItem(row_idx, 0, QTableWidgetItem(str(result.id)))
-            for col_idx, key in enumerate(sample_result.keys(), start=1):
+            for col_idx, key in enumerate(columns, start=1):
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(result.result[key])))
 
 if __name__ == '__main__':
