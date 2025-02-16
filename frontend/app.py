@@ -1,4 +1,3 @@
-import json
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QPushButton, QLabel, QFormLayout
 from PyQt5.QtCore import Qt
@@ -45,16 +44,12 @@ class Dashboard(QMainWindow):
             self.tool_combo.addItem(tool)
 
     def load_schema(self):
+        self.clear_filters()
         tool_name = self.tool_combo.currentText()
         if tool_name == "Select a tool":
-            self.filter_layout.setParent(None)
-            self.filters = {}
             return
 
         schema = self.db.fetch_schema(tool_name)
-        self.filters = {}
-        self.filter_layout.setParent(None)
-        self.filter_layout = QFormLayout()
 
         for field, value in schema.items():
             if isinstance(value, str):
@@ -63,6 +58,13 @@ class Dashboard(QMainWindow):
                 self.filter_layout.addRow(QLabel(field), line_edit)
 
         self.centralWidget().layout().insertLayout(1, self.filter_layout)
+
+    def clear_filters(self):
+        for i in reversed(range(self.filter_layout.count())):
+            widget = self.filter_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+        self.filters = {}
 
     def load_data(self):
         tool_name = self.tool_combo.currentText()
@@ -80,8 +82,8 @@ class Dashboard(QMainWindow):
 
         sample_result = results[0].result
         columns = list(sample_result.keys())
-        self.table.setColumnCount(len(columns))
-        self.table.setHorizontalHeaderLabels(columns)
+        self.table.setColumnCount(len(columns) + 1)
+        self.table.setHorizontalHeaderLabels(["ID"] + columns)
 
         self.table.setRowCount(len(results))
         for row_idx, result in enumerate(results):
