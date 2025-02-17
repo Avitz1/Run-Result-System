@@ -1,99 +1,63 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QComboBox, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QPushButton, QLabel, QFormLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
 from database.database_client import Database
+from frontend.constants import SELECT_TOOL_TEXT, SEARCH_BUTTON_TEXT, DASHBOARD_TITLE
+from frontend.ui_components import ToolComboBox, FilterForm, ResultsTable
 
 
 class Dashboard(QMainWindow):
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
-        self.db = Database()
-        self.initUI()
+        self.db = db
+        self.init_ui()
 
-    def initUI(self):
-        self.setWindowTitle('Run Results Dashboard')
+    def init_ui(self):
+        self.setWindowTitle(DASHBOARD_TITLE)
         self.setGeometry(100, 100, 800, 600)
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         layout = QVBoxLayout(main_widget)
 
-        self.tool_combo = QComboBox()
-        self.tool_combo.addItem("Select a tool")
+        self.tool_combo = ToolComboBox(self.db)
         self.tool_combo.currentIndexChanged.connect(self.load_schema)
         layout.addWidget(self.tool_combo)
 
-        self.filter_layout = QFormLayout()
-        self.filters = {}
-        layout.addLayout(self.filter_layout)
+        self.filter_form = FilterForm()
+        layout.addLayout(self.filter_form)
 
-        self.search_button = QPushButton("Search")
+        self.search_button = QPushButton(SEARCH_BUTTON_TEXT)
         self.search_button.clicked.connect(self.load_data)
         layout.addWidget(self.search_button)
 
-        self.table = QTableWidget()
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setSortingEnabled(True)
-        layout.addWidget(self.table)
-
-        self.load_tools()
-
-    def load_tools(self):
-        tools = self.db.fetch_tools()
-        for tool in tools:
-            self.tool_combo.addItem(tool)
+        self.results_table = ResultsTable()
+        layout.addWidget(self.results_table)
 
     def load_schema(self):
-        self.clear_table()
-        self.clear_filters()
         tool_name = self.tool_combo.currentText()
-        if tool_name == "Select a tool":
+        if tool_name == SELECT_TOOL_TEXT:
+            self.filter_form.clear_filters()
+            self.results_table.clear_table()
             return
 
         schema = self.db.fetch_schema(tool_name)
-
-        for field, value in schema.items():
-            if isinstance(value, str):
-                line_edit = QLineEdit()
-                self.filters[field] = line_edit
-                self.filter_layout.addRow(QLabel(field), line_edit)
-
-    def clear_filters(self):
-        while self.filter_layout.count():
-            child = self.filter_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        self.filters = {}
-
-    def clear_table(self):
-        self.table.setRowCount(0)
-        self.table.setColumnCount(0)
+        self.filter_form.load_schema(schema)
+        self.results_table.clear_table()
 
     def load_data(self):
         tool_name = self.tool_combo.currentText()
-        if tool_name == "Select a tool":
-            self.clear_table()
+        if tool_name == SELECT_TOOL_TEXT:
+            self.results_table.clear_table()
             return
 
-        filters = {field: edit.text() for field, edit in self.filters.items() if edit.text()}
+        filters = {field: edit.text() for field, edit in self.filter_form.filters.items() if edit.text()}
         results = self.db.fetch_results(tool_name, filters)
-        if not results:
-            self.clear_table()
-            return
-
-        sample_result = results[0].result
-        columns = list(sample_result.keys())
-        self.table.setColumnCount(len(columns) + 1)
-        self.table.setHorizontalHeaderLabels(["ID"] + columns)
-
-        self.table.setRowCount(len(results))
-        for row_idx, result in enumerate(results):
-            self.table.setItem(row_idx, 0, QTableWidgetItem(str(result.id)))
-            for col_idx, key in enumerate(columns, start=1):
-                self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(result.result[key])))
+        self.results_table.load_data(results)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    dashboard = Dashboard()
+    db = Database()
+    dashboard = Dashboard(db)
     dashboard.show()
     sys.exit(app.exec_())

@@ -1,0 +1,5 @@
+TABLE_VIEW_TIP = "Click on a column header to sort the data by that column."
+ID_COLUMN_NAME = "ID"
+SELECT_TOOL_TEXT = "Select a tool"
+SEARCH_BUTTON_TEXT = "Search"
+DASHBOARD_TITLE = "Run Results Dashboard"
