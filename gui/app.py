@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
-from database.database_client import Database
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox
+from database.database_client import Database, DatabaseConnectionError
 from gui.constants import SELECT_TOOL_TEXT, SEARCH_BUTTON_TEXT, DASHBOARD_TITLE
 from gui.ui_components import ToolComboBox, FilterForm, ResultsTable
 
@@ -39,10 +39,12 @@ class Dashboard(QMainWindow):
             self.filter_form.clear_filters()
             self.results_table.clear_table()
             return
-
-        schema = self.db.fetch_schema(tool_name)
-        self.filter_form.load_schema(schema)
-        self.results_table.clear_table()
+        try:
+            schema = self.db.fetch_schema(tool_name)
+            self.filter_form.load_schema(schema)
+            self.results_table.clear_table()
+        except DatabaseConnectionError as e:
+            self.show_error_message(str(e))
 
     def load_data(self):
         tool_name = self.tool_combo.currentText()
@@ -51,13 +53,23 @@ class Dashboard(QMainWindow):
             return
 
         filters = {field: edit.text() for field, edit in self.filter_form.filters.items() if edit.text()}
-        results = self.db.fetch_results(tool_name, filters)
-        self.results_table.load_data(results)
+        try:
+            results = self.db.fetch_results(tool_name, filters)
+            self.results_table.load_data(results)
+        except DatabaseConnectionError as e:
+            self.show_error_message(str(e))
+
+    def show_error_message(self, message):
+        QMessageBox.critical(self, "Database Error", message)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    db = Database()
-    dashboard = Dashboard(db)
-    dashboard.show()
-    sys.exit(app.exec_())
+    try:
+        db = Database()
+        dashboard = Dashboard(db)
+        dashboard.show()
+        sys.exit(app.exec_())
+    except DatabaseConnectionError as e:
+        QMessageBox.critical(None, "Database Error", str(e))
+        sys.exit(1)

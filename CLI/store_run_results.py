@@ -10,7 +10,7 @@ import logging
 from tools.tools_registry import ToolRegistry
 from utils.argument_parser import ArgumentParser
 from utils.data_loader import DataLoader
-from database.database_client import Database
+from database.database_client import Database, DatabaseConnectionError
 
 
 def store_run_result(tool_name, result_data):
@@ -23,6 +23,9 @@ def store_run_result(tool_name, result_data):
         db = Database()
         db.store_run_result(tool_name, result_data)
         return True
+    except DatabaseConnectionError as e:
+        logging.error("Database error: %s", e)
+        return False
     except Exception as e:
         logging.error("Failed to store run result: %s", e)
         return False
