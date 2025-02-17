@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-import json
+from abc import ABC
 from jsonschema import validate as validate_schema, ValidationError
 
 
