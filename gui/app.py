@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
 from database.database_client import Database
-from frontend.constants import SELECT_TOOL_TEXT, SEARCH_BUTTON_TEXT, DASHBOARD_TITLE
-from frontend.ui_components import ToolComboBox, FilterForm, ResultsTable
+from gui.constants import SELECT_TOOL_TEXT, SEARCH_BUTTON_TEXT, DASHBOARD_TITLE
+from gui.ui_components import ToolComboBox, FilterForm, ResultsTable
 
 
 class Dashboard(QMainWindow):

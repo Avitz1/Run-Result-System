@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QFormLayout, QLineEdit, QLabel, QTableWidget, QHeaderView, QTableWidgetItem
 
-from frontend.constants import TABLE_VIEW_TIP, ID_COLUMN_NAME, SELECT_TOOL_TEXT
+from gui.constants import TABLE_VIEW_TIP, ID_COLUMN_NAME, SELECT_TOOL_TEXT
 
 
 class ToolComboBox(QComboBox):
