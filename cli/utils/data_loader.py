@@ -1,5 +1,6 @@
 """This module is responsible for loading the data from the source, either a file or a string, and returning it as a
 dictionary."""
+
 import argparse
 import json
 import logging
