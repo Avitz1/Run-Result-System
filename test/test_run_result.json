@@ -1,0 +1,8 @@
+{
+  "user": "Elijah",
+  "project": "baa",
+  "tag": "not bad",
+  "aberrant_cells": ["/hier0/hier1/cell0", "/hier0/hier3/cell2"],
+  "avg_aberration": 1.4892732007,
+  "edge_focus": [0, 0, 1, 0]
+}
