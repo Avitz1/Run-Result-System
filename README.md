@@ -33,3 +33,8 @@ python gui/app.py
 ```
 In the GUI, click on a column header to sort the table by that column.
 
+### To run the tests
+```bash
+cd tests
+pytest
+```
