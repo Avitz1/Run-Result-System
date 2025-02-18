@@ -10,4 +10,4 @@ class Tool(ABC):
         try:
             validate_schema(instance=result, schema=self.schema)
         except ValidationError as e:
-            raise ValueError(f"Invalid result data: {e.message}")
+            raise ValidationError(f"Result does not match schema: {e}")
