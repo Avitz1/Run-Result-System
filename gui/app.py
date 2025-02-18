@@ -1,5 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox
+
 from database.database_client import Database, DatabaseConnectionError
 from gui.constants import SELECT_TOOL_TEXT, SEARCH_BUTTON_TEXT, DASHBOARD_TITLE
 from gui.ui_components import ToolComboBox, FilterForm, ResultsTable
@@ -43,8 +44,8 @@ class Dashboard(QMainWindow):
             schema = self.db.fetch_schema(tool_name)
             self.filter_form.load_schema(schema)
             self.results_table.clear_table()
-        except DatabaseConnectionError as e:
-            self.show_error_message(str(e))
+        except DatabaseConnectionError as err:
+            self.show_error_message(str(err))
 
     def load_data(self):
         tool_name = self.tool_combo.currentText()
@@ -56,8 +57,8 @@ class Dashboard(QMainWindow):
         try:
             results = self.db.fetch_results(tool_name, filters)
             self.results_table.load_data(results)
-        except DatabaseConnectionError as e:
-            self.show_error_message(str(e))
+        except DatabaseConnectionError as err:
+            self.show_error_message(str(err))
 
     def show_error_message(self, message):
         QMessageBox.critical(self, "Database Error", message)
